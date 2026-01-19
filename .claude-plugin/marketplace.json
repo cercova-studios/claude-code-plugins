@@ -1,0 +1,13 @@
+{
+  "name": "claude-code-plugins",
+  "owner": {
+    "name": "Rohit Nair"
+  },
+  "plugins": [
+    {
+      "name": "10x-swe",
+      "source": "./plugins/10x-swe",
+      "description": "Adds a /10x-swe command for enhanced software engineering workflows"
+    }
+  ]
+}
