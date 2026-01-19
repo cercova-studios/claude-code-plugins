@@ -1,1 +1,1 @@
-# claude-code-plugins
+# terminal-agent-plugins
