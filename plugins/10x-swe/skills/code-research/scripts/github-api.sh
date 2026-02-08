@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# GitHub API helper script - lightweight alternative to MCP for common operations
+# GitHub helper script that uses the gh CLI for common operations.
 # Usage:
 #   github-api.sh repo owner/repo              - Get repository info
 #   github-api.sh issues owner/repo [query]    - Search issues/PRs
@@ -9,16 +9,29 @@
 
 set -euo pipefail
 
-API_BASE="https://api.github.com"
-# Use GITHUB_TOKEN if available for higher rate limits
-AUTH_HEADER=""
-if [[ -n "${GITHUB_TOKEN:-}" ]]; then
-    AUTH_HEADER="-H \"Authorization: token $GITHUB_TOKEN\""
-fi
+require_gh() {
+    if command -v gh >/dev/null 2>&1; then
+        return
+    fi
+
+    cat <<EOF
+Error: GitHub CLI (gh) is required but not installed.
+
+Install gh:
+  macOS:   brew install gh
+  Ubuntu:  sudo apt update && sudo apt install gh
+  Fedora:  sudo dnf install gh
+  Arch:    sudo pacman -S github-cli
+
+Then authenticate:
+  gh auth login
+EOF
+    exit 1
+}
 
 usage() {
     cat <<EOF
-GitHub API Helper
+GitHub Helper (gh CLI)
 
 Commands:
   repo owner/repo              Get repository metadata (stars, forks, description)
@@ -27,8 +40,9 @@ Commands:
   readme owner/repo            Fetch and decode README content
   tree owner/repo [path]       List directory contents (default: root)
 
-Environment:
-  GITHUB_TOKEN                 Optional: Set for higher rate limits (5000/hr vs 60/hr)
+Requirements:
+  gh                           GitHub CLI (https://cli.github.com/)
+  jq                           JSON processing for local filtering/formatting
 
 Examples:
   github-api.sh repo facebook/react
@@ -40,46 +54,35 @@ EOF
     exit 1
 }
 
-fetch() {
-    local url="$1"
-    if [[ -n "${GITHUB_TOKEN:-}" ]]; then
-        curl -sL -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github.v3+json" "$url"
-    else
-        curl -sL -H "Accept: application/vnd.github.v3+json" "$url"
-    fi
-}
-
 cmd_repo() {
     local repo="$1"
-    fetch "$API_BASE/repos/$repo" | jq '{
-        name: .full_name,
+    gh repo view "$repo" --json nameWithOwner,description,stargazerCount,forkCount,primaryLanguage,repositoryTopics,defaultBranchRef,updatedAt,url | jq '{
+        name: .nameWithOwner,
         description: .description,
-        stars: .stargazers_count,
-        forks: .forks_count,
-        language: .language,
-        topics: .topics,
-        default_branch: .default_branch,
-        updated_at: .updated_at,
-        html_url: .html_url
+        stars: .stargazerCount,
+        forks: .forkCount,
+        language: (.primaryLanguage.name // null),
+        topics: [.repositoryTopics[].topic.name],
+        default_branch: (.defaultBranchRef.name // null),
+        updated_at: .updatedAt,
+        html_url: .url
     }'
 }
 
 cmd_issues() {
     local repo="$1"
     local query="${2:-}"
-    local search_query="repo:$repo is:issue is:open"
+    local search_query="repo:$repo is:issue"
     if [[ -n "$query" ]]; then
         search_query="$search_query $query"
     fi
-    local encoded_query
-    encoded_query=$(printf '%s' "$search_query" | jq -sRr @uri)
-    fetch "$API_BASE/search/issues?q=$encoded_query&per_page=10&sort=updated" | jq '.items | map({
+    gh search issues "$search_query" --limit 10 --json number,title,state,labels,createdAt,url,body | jq 'map({
         number: .number,
         title: .title,
         state: .state,
         labels: [.labels[].name],
-        created_at: .created_at,
-        html_url: .html_url,
+        created_at: .createdAt,
+        html_url: .url,
         body_preview: (.body // "" | .[0:200])
     })'
 }
@@ -91,31 +94,32 @@ cmd_search() {
     if [[ -n "$qualifier" ]]; then
         search_query="$query $qualifier"
     fi
-    local encoded_query
-    encoded_query=$(printf '%s' "$search_query" | jq -sRr @uri)
-    fetch "$API_BASE/search/code?q=$encoded_query&per_page=10" | jq '.items | map({
-        repo: .repository.full_name,
+    gh search code "$search_query" --limit 10 --json repository,path,url | jq 'map({
+        repo: .repository.nameWithOwner,
         path: .path,
-        html_url: .html_url,
-        score: .score
+        html_url: .url
     })'
 }
 
 cmd_readme() {
     local repo="$1"
-    fetch "$API_BASE/repos/$repo/readme" | jq -r '.content' | base64 -d 2>/dev/null || echo "Could not decode README"
+    gh api "repos/$repo/readme" --jq '.content' | base64 -d 2>/dev/null || echo "Could not decode README"
 }
 
 cmd_tree() {
     local repo="$1"
     local path="${2:-.}"
-    local encoded_path
-    encoded_path=$(printf '%s' "$path" | jq -sRr @uri)
-    fetch "$API_BASE/repos/$repo/contents/$encoded_path" | jq 'if type == "array" then map({name: .name, type: .type, size: .size, path: .path}) else {name: .name, type: .type, size: .size, content: (.content // null)} end'
+    local endpoint="repos/$repo/contents"
+    if [[ "$path" != "." ]]; then
+        endpoint="$endpoint/$path"
+    fi
+    gh api "$endpoint" | jq 'if type == "array" then map({name: .name, type: .type, size: .size, path: .path}) else {name: .name, type: .type, size: .size, content: (.content // null)} end'
 }
 
 # Main dispatch
 [[ $# -lt 1 ]] && usage
+[[ "$1" == "-h" || "$1" == "--help" ]] && usage
+require_gh
 
 case "$1" in
     repo)

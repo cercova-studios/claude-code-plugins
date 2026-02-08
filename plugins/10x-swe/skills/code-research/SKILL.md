@@ -8,12 +8,18 @@ Perform comprehensive code research by intelligently selecting from built-in too
 </objective>
 
 <quick_start>
+Before any Bash command that uses `${AGENT_ROOT}`, run:
+```bash
+source ./scripts/agent-env.sh
+```
+This resolves `AGENT_ROOT` to `./.agents` in the current working directory.
+
 When researching code, follow the **tool escalation ladder**:
 
 1. **Local first** - Use Grep/Glob/Read for codebase exploration
-2. **Terminal research** - Use fast CLI tools (w3m/lynx, curl, jq, rg, fd) and DDG bangs
+2. **Terminal research** - Use fast CLI tools (w3m/lynx, curl, jq, rg, fd, gh) and DDG bangs
 3. **Built-in web** - Use WebSearch/WebFetch for documentation and articles
-4. **Scripts** - Use API scripts for GitHub, Stack Overflow
+4. **Scripts** - Use lightweight scripts for GitHub (via `gh`) and Stack Overflow
 5. **MCP servers** - Use Exa/Deepwiki/Chrome for complex research needs
 
 Start simple. Escalate only when simpler tools fail.
@@ -58,24 +64,41 @@ Start simple. Escalate only when simpler tools fail.
 **When to use:** Quick web/CLI research before WebSearch, or when you need high-throughput data extraction.
 </tier>
 
-<tier name="2" label="Lightweight Scripts (API Access)">
+<tier name="2" label="Lightweight Scripts (CLI Access)">
 Located in `scripts/` directory. Run via Bash.
 
-**github-api.sh** - GitHub repository information
+**github-api.sh** - GitHub repository information (powered by `gh`)
 ```bash
 # Get repo info, issues, PRs, code search
-~/.claude/skills/code-research/scripts/github-api.sh repo owner/repo
-~/.claude/skills/code-research/scripts/github-api.sh issues owner/repo "search query"
-~/.claude/skills/code-research/scripts/github-api.sh search "code query" language:python
+${AGENT_ROOT}/skills/code-research/scripts/github-api.sh repo owner/repo
+${AGENT_ROOT}/skills/code-research/scripts/github-api.sh issues owner/repo "search query"
+${AGENT_ROOT}/skills/code-research/scripts/github-api.sh search "code query" language:python
+```
+
+If `gh` is not installed, install and authenticate first:
+```bash
+# macOS
+brew install gh
+
+# Ubuntu/Debian
+sudo apt update && sudo apt install gh
+
+# Fedora
+sudo dnf install gh
+
+# Arch
+sudo pacman -S github-cli
+
+gh auth login
 ```
 
 **stackoverflow-api.sh** - Find solutions to errors
 ```bash
 # Search Stack Overflow for solutions
-~/.claude/skills/code-research/scripts/stackoverflow-api.sh "error message or question"
+${AGENT_ROOT}/skills/code-research/scripts/stackoverflow-api.sh "error message or question"
 ```
 
-**When to use:** When you need structured API data (issues, PRs, code across repos) that WebSearch can't provide cleanly.
+**When to use:** When you need structured GitHub data (issues, PRs, code across repos) that WebSearch can't provide cleanly.
 </tier>
 
 <tier name="3" label="MCP Servers (Heavy Artillery)">
@@ -130,8 +153,8 @@ WebSearch: "!gh repo:org/project authentication middleware"
 # Fast extraction
 curl -s https://docs.example.com/api | rg -n "endpoint" | sed -n '1,120p'
 
-# Structured data
-curl -s https://api.github.com/repos/org/repo | jq -r '.description'
+# Structured GitHub data via gh
+gh repo view org/repo --json description --jq '.description'
 
 # Clean article text
 curl -s https://blog.example.com/post | python -m readability | rg -n "API" | sed -n '1,80p'
@@ -162,11 +185,11 @@ WebFetch: "https://docs.library.com/guide"
 <step name="4" label="Use Scripts for Structured Data">
 When you need GitHub/StackOverflow data:
 ```bash
-# Find similar issues
-~/.claude/skills/code-research/scripts/github-api.sh issues facebook/react "useEffect cleanup"
+# Find similar issues (via gh-backed helper)
+${AGENT_ROOT}/skills/code-research/scripts/github-api.sh issues facebook/react "useEffect cleanup"
 
 # Find error solutions
-~/.claude/skills/code-research/scripts/stackoverflow-api.sh "React useEffect memory leak"
+${AGENT_ROOT}/skills/code-research/scripts/stackoverflow-api.sh "React useEffect memory leak"
 ```
 </step>
 
@@ -228,10 +251,10 @@ Write: research-{topic}-{date}.md
 | "What's the best library for X?" | WebSearch → Exa MCP |
 | "How do I use library X?" | WebFetch (docs URL) → Deepwiki MCP |
 | "Why am I getting error X?" | Grep (local) → stackoverflow-api.sh → WebSearch |
-| "How do other projects do X?" | github-api.sh |
+| "How do other projects do X?" | github-api.sh (gh) |
 | "Show me the docs for X" | WebFetch → Deepwiki → Chrome MCP |
 | "Quickly skim docs" | w3m/lynx → curl + rg/sed |
-| "Find issues related to X" | github-api.sh issues |
+| "Find issues related to X" | github-api.sh issues (gh) |
 | "Search code for pattern X" | rg (local) → Exa MCP |
 | "Need fast CLI search" | rg/fd/bat (fallback: grep/find/cat) |
 | "Navigate to JS-heavy site" | Chrome MCP (browser_navigate + browser_snapshot) |

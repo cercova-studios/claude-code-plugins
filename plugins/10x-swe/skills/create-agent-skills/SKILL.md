@@ -6,6 +6,14 @@ description: Expert guidance for creating, writing, building, and refining Claud
 <essential_principles>
 ## How Skills Work
 
+## Environment Preflight (Required for Bash Commands)
+
+Before running any command that uses `${AGENT_ROOT}`, initialize the shell:
+```bash
+source ./scripts/agent-env.sh
+```
+This sets `AGENT_ROOT` to `./.agents` for the current working directory.
+
 Skills are modular, filesystem-based capabilities that provide domain expertise on demand. This skill teaches how to create effective skills.
 
 ### 1. Skills Are Prompts
