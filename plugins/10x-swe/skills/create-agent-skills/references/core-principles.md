@@ -4,7 +4,7 @@ Core principles guide skill authoring decisions. These principles ensure skills 
 
 <xml_structure_principle>
 <description>
-Skills use pure XML structure for consistent parsing, efficient token usage, and improved Claude performance.
+Skills use pure XML structure for consistent parsing, efficient token usage, and improved agent performance.
 </description>
 
 <why_xml>
@@ -18,13 +18,13 @@ This consistency makes skills predictable and easier to maintain.
 </consistency>
 
 <parseability>
-XML provides unambiguous boundaries and semantic meaning. Claude can reliably:
+XML provides unambiguous boundaries and semantic meaning. The agent can reliably:
 - Identify section boundaries (where content starts and ends)
 - Understand content purpose (what role each section plays)
 - Skip irrelevant sections (progressive disclosure)
 - Parse programmatically (validation tools can check structure)
 
-Markdown headings are just visual formatting. Claude must infer meaning from heading text, which is less reliable.
+Markdown headings are just visual formatting. The agent must infer meaning from heading text, which is less reliable.
 </parseability>
 
 <token_efficiency>
@@ -37,7 +37,7 @@ XML tags are more efficient than markdown headings:
 ## Advanced features
 ## Success criteria
 ```
-Total: ~20 tokens, no semantic meaning to Claude
+Total: ~20 tokens, no semantic meaning to the agent.
 
 **XML tags**:
 ```xml
@@ -51,8 +51,8 @@ Total: ~15 tokens, semantic meaning built-in
 Savings compound across all skills in the ecosystem.
 </token_efficiency>
 
-<claude_performance>
-Claude performs better with pure XML because:
+<agent_performance>
+The agent performs better with pure XML because:
 - Unambiguous section boundaries reduce parsing errors
 - Semantic tags convey intent directly (no inference needed)
 - Nested tags create clear hierarchies
@@ -60,7 +60,7 @@ Claude performs better with pure XML because:
 - Progressive disclosure works more reliably
 
 Pure XML structure is not just a style preference—it's a performance optimization.
-</claude_performance>
+</agent_performance>
 </why_xml>
 
 <critical_rule>
@@ -83,12 +83,12 @@ The context window is shared. Your skill shares it with the system prompt, conve
 </description>
 
 <guidance>
-Only add context Claude doesn't already have. Challenge each piece of information:
-- "Does Claude really need this explanation?"
-- "Can I assume Claude knows this?"
+Only add context the agent doesn't already have. Challenge each piece of information:
+- "Does the agent really need this explanation?"
+- "Can I assume the agent knows this?"
 - "Does this paragraph justify its token cost?"
 
-Assume Claude is smart. Don't explain obvious concepts.
+Assume the agent is smart. Don't explain obvious concepts.
 </guidance>
 
 <concise_example>
@@ -122,7 +122,7 @@ This code opens the PDF and extracts text from the first page.
 </quick_start>
 ```
 
-The concise version assumes Claude knows what PDFs are, understands Python imports, and can read code. All those assumptions are correct.
+The concise version assumes the agent knows what PDFs are, understands Python imports, and can read code. All those assumptions are correct.
 </concise_example>
 
 <when_to_elaborate>
@@ -142,7 +142,7 @@ Don't add explanation for:
 
 <degrees_of_freedom_principle>
 <description>
-Match the level of specificity to the task's fragility and variability. Give Claude more freedom for creative tasks, less freedom for fragile operations.
+Match the level of specificity to the task's fragility and variability. Give the agent more freedom for creative tasks, less freedom for fragile operations.
 </description>
 
 <high_freedom>
@@ -173,7 +173,7 @@ Review code for quality, bugs, and maintainability.
 </success_criteria>
 ```
 
-Claude has freedom to adapt the review based on what the code needs.
+The agent has freedom to adapt the review based on what the code needs.
 </example>
 </high_freedom>
 
@@ -209,7 +209,7 @@ def generate_report(data, format="markdown", include_charts=True):
 </success_criteria>
 ```
 
-Claude can customize the template based on requirements.
+The agent can customize the template based on requirements.
 </example>
 </medium_freedom>
 
@@ -244,7 +244,7 @@ python scripts/migrate.py --verify --backup
 </success_criteria>
 ```
 
-Claude must follow the exact command with no variation.
+The agent must follow the exact command with no variation.
 </example>
 </low_freedom>
 
@@ -263,30 +263,30 @@ Mismatched specificity causes problems:
 
 <model_testing_principle>
 <description>
-Skills act as additions to models, so effectiveness depends on the underlying model. What works for Opus might need more detail for Haiku.
+Skills act as additions to models, so effectiveness depends on the underlying model. What works for a large reasoning model might need more detail for a smaller, faster model.
 </description>
 
 <testing_across_models>
 Test your skill with all models you plan to use:
 
-<haiku_testing>
-**Claude Haiku** (fast, economical)
+<small_model_testing>
+**Small/Fast models** (fast, economical)
 
 Questions to ask:
 - Does the skill provide enough guidance?
 - Are examples clear and complete?
 - Do implicit assumptions become explicit?
-- Does Haiku need more structure?
+- Does this model need more structure?
 
-Haiku benefits from:
+Small/Fast models benefit from:
 - More explicit instructions
 - Complete examples (no partial code)
 - Clear success criteria
 - Step-by-step workflows
-</haiku_testing>
+</small_model_testing>
 
-<sonnet_testing>
-**Claude Sonnet** (balanced)
+<mid_model_testing>
+**Balanced models** (general purpose)
 
 Questions to ask:
 - Is the skill clear and efficient?
@@ -294,28 +294,28 @@ Questions to ask:
 - Are workflows well-structured?
 - Does progressive disclosure work?
 
-Sonnet benefits from:
+Balanced models benefit from:
 - Balanced detail level
 - XML structure for clarity
 - Progressive disclosure
 - Concise but complete guidance
-</sonnet_testing>
+</mid_model_testing>
 
-<opus_testing>
-**Claude Opus** (powerful reasoning)
+<large_model_testing>
+**Large reasoning models** (strong reasoning)
 
 Questions to ask:
 - Does the skill avoid over-explaining?
-- Can Opus infer obvious steps?
+- Can this model infer obvious steps?
 - Are constraints clear?
 - Is context minimal but sufficient?
 
-Opus benefits from:
+Large reasoning models benefit from:
 - Concise instructions
 - Principles over procedures
 - High degrees of freedom
 - Trust in reasoning capabilities
-</opus_testing>
+</large_model_testing>
 </testing_across_models>
 
 <balancing_across_models>
@@ -337,18 +337,18 @@ For scanned PDFs requiring OCR, use pdf2image with pytesseract instead.
 ```
 
 This works for all models:
-- Haiku gets complete working example
-- Sonnet gets clear default with escape hatch
-- Opus gets enough context without over-explanation
+- Small models get a complete working example
+- Balanced models get a clear default with escape hatch
+- Large models get enough context without over-explanation
 
-**Too minimal for Haiku**:
+**Too minimal for smaller models**:
 ```xml
 <quick_start>
 Use pdfplumber for text extraction.
 </quick_start>
 ```
 
-**Too verbose for Opus**:
+**Too verbose for larger models**:
 ```xml
 <quick_start>
 PDF files are documents that contain text. To extract that text, we use a library called pdfplumber. First, import the library at the top of your Python file. Then, open the PDF file using the pdfplumber.open() method. This returns a PDF object. Access the pages attribute to get a list of pages. Each page has an extract_text() method that returns the text content...
@@ -369,7 +369,7 @@ Don't optimize for one model. Find the balance that works across your target mod
 
 <progressive_disclosure_principle>
 <description>
-SKILL.md serves as an overview. Reference files contain details. Claude loads reference files only when needed.
+SKILL.md serves as an overview. Reference files contain details. The agent loads reference files only when needed.
 </description>
 
 <token_efficiency>
@@ -395,7 +395,7 @@ See [skill-structure.md](skill-structure.md) for progressive disclosure patterns
 
 <validation_principle>
 <description>
-Validation scripts are force multipliers. They catch errors that Claude might miss and provide actionable feedback.
+Validation scripts are force multipliers. They catch errors that the agent might miss and provide actionable feedback.
 </description>
 
 <characteristics>
@@ -412,11 +412,11 @@ See [workflows-and-validation.md](workflows-and-validation.md) for validation pa
 
 <principle_summary>
 <xml_structure>
-Use pure XML structure for consistency, parseability, and Claude performance. Required tags: objective, quick_start, success_criteria.
+Use pure XML structure for consistency, parseability, and agent performance. Required tags: objective, quick_start, success_criteria.
 </xml_structure>
 
 <conciseness>
-Only add context Claude doesn't have. Assume Claude is smart. Challenge every piece of content.
+Only add context the agent doesn't have. Assume the agent is smart. Challenge every piece of content.
 </conciseness>
 
 <degrees_of_freedom>
@@ -424,7 +424,7 @@ Match specificity to fragility. High freedom for creative tasks, low freedom for
 </degrees_of_freedom>
 
 <model_testing>
-Test with all target models. Balance detail level to work across Haiku, Sonnet, and Opus.
+Test with all target models. Balance detail level to work across small, balanced, and large reasoning models.
 </model_testing>
 
 <progressive_disclosure>

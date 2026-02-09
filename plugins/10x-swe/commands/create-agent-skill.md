@@ -1,5 +1,5 @@
 ---
-description: Create or edit Claude Code skills with expert guidance on structure and best practices
+description: Create or edit agent skills with expert guidance on structure and best practices
 allowed-tools: Skill(create-agent-skills)
 argument-hint: [skill description or requirements]
 ---

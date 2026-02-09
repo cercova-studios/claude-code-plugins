@@ -10,7 +10,7 @@ Raw curl commands with environment variables expose credentials:
 curl -H "Authorization: Bearer $API_KEY" https://api.example.com/data
 ```
 
-When Claude executes this, the full command with expanded `$API_KEY` appears in the conversation.
+When the assistant executes this, the full command with expanded `$API_KEY` appears in the conversation.
 </the_problem>
 
 <the_solution>
