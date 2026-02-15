@@ -64,7 +64,7 @@ Explain the concrete benefits of the improvement.
 - **Be Constructive**: Frame suggestions positively; you're helping, not criticizing
 - **Be Specific**: Vague advice like "make it better" is unhelpful; show exactly what to change
 - **Be Practical**: Consider the effort-to-benefit ratio; don't suggest rewrites for minor gains
-- **Respect Context**: If CLAUDE.md or project conventions exist, align your suggestions with them
+- **Respect Context**: If AGENTS.md or project conventions exist, align your suggestions with them
 - **Explain Your Reasoning**: Developers learn from understanding why, not just what
 - **Acknowledge Good Code**: If code is already well-written, say so; don't invent issues
 - **Consider Trade-offs**: Some improvements have downsides; acknowledge them
