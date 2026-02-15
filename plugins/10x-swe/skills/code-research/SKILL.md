@@ -19,7 +19,7 @@ When researching code, follow the **tool escalation ladder**:
 1. **Local first** - Use Grep/Glob/Read for codebase exploration
 2. **Terminal research** - Use fast CLI tools (w3m/lynx, curl, jq, rg, fd, gh) and DDG bangs
 3. **Built-in web** - Use WebSearch/WebFetch for documentation and articles
-4. **Scripts** - Use lightweight scripts for GitHub (via `gh`) and Stack Overflow
+4. **Skills & Scripts** - Use `gh-cli` skill for GitHub, scripts for Stack Overflow
 5. **MCP servers** - Use Exa/Deepwiki/Chrome for complex research needs
 
 Start simple. Escalate only when simpler tools fail.
@@ -64,33 +64,10 @@ Start simple. Escalate only when simpler tools fail.
 **When to use:** Quick web/CLI research before WebSearch, or when you need high-throughput data extraction.
 </tier>
 
-<tier name="2" label="Lightweight Scripts (CLI Access)">
-Located in `scripts/` directory. Run via Bash.
-
-**github-api.sh** - GitHub repository information (powered by `gh`)
-```bash
-# Get repo info, issues, PRs, code search
-${AGENT_ROOT}/skills/code-research/scripts/github-api.sh repo owner/repo
-${AGENT_ROOT}/skills/code-research/scripts/github-api.sh issues owner/repo "search query"
-${AGENT_ROOT}/skills/code-research/scripts/github-api.sh search "code query" language:python
-```
-
-If `gh` is not installed, install and authenticate first:
-```bash
-# macOS
-brew install gh
-
-# Ubuntu/Debian
-sudo apt update && sudo apt install gh
-
-# Fedora
-sudo dnf install gh
-
-# Arch
-sudo pacman -S github-cli
-
-gh auth login
-```
+<tier name="2" label="Lightweight Scripts & Skills (CLI Access)">
+**GitHub CLI (`gh`)** - Use the `gh-cli` skill for comprehensive GitHub operations:
+- Repository info, issues, PRs, code search, Actions, releases, and more
+- Invoke with: `Skill: gh-cli`
 
 **stackoverflow-api.sh** - Find solutions to errors
 ```bash
@@ -182,12 +159,16 @@ WebFetch: "https://docs.library.com/guide"
 ```
 </step>
 
-<step name="4" label="Use Scripts for Structured Data">
+<step name="4" label="Use Skills & Scripts for Structured Data">
 When you need GitHub/StackOverflow data:
+```
+# GitHub operations - invoke the gh-cli skill
+Skill: gh-cli
+# Then use gh directly, e.g.:
+gh issue list -R facebook/react --search "useEffect cleanup"
+gh search code "useEffect cleanup" --repo facebook/react
+```
 ```bash
-# Find similar issues (via gh-backed helper)
-${AGENT_ROOT}/skills/code-research/scripts/github-api.sh issues facebook/react "useEffect cleanup"
-
 # Find error solutions
 ${AGENT_ROOT}/skills/code-research/scripts/stackoverflow-api.sh "React useEffect memory leak"
 ```
@@ -251,10 +232,10 @@ Write: research-{topic}-{date}.md
 | "What's the best library for X?" | WebSearch → Exa MCP |
 | "How do I use library X?" | WebFetch (docs URL) → Deepwiki MCP |
 | "Why am I getting error X?" | Grep (local) → stackoverflow-api.sh → WebSearch |
-| "How do other projects do X?" | github-api.sh (gh) |
+| "How do other projects do X?" | gh-cli skill → `gh search` |
 | "Show me the docs for X" | WebFetch → Deepwiki → Chrome MCP |
 | "Quickly skim docs" | w3m/lynx → curl + rg/sed |
-| "Find issues related to X" | github-api.sh issues (gh) |
+| "Find issues related to X" | gh-cli skill → `gh issue/search` |
 | "Search code for pattern X" | rg (local) → Exa MCP |
 | "Need fast CLI search" | rg/fd/bat (fallback: grep/find/cat) |
 | "Navigate to JS-heavy site" | Chrome MCP (browser_navigate + browser_snapshot) |
